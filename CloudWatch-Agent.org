@@ -210,7 +210,7 @@ default choice: [1]:
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json
 #+end_src
 
-- Tip: Command to check status of the Cloudwatch agent
+- Command to check status of the Cloudwatch agent
 #+begin_src bash
 service amazon-cloudwatch-agent status
 #+end_src
