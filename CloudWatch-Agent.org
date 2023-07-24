@@ -65,8 +65,12 @@ The entire process just has 4 steps,
 wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
 
 sudo dpkg -i -E ./amazon-cloudwatch-agent.deb
-Step 3: Launch the Cloudwatch wizard
+#+end_src
 
+
+- Step 3: Launch the Cloudwatch wizard
+
+#+begin_src bash
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-config-wizard
 Choose these settings
 
