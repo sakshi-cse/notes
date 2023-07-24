@@ -164,3 +164,7 @@ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-c
 #+begin_src bash
 service amazon-cloudwatch-agent status
 #+end_src
+- Command to restart of the Cloudwatch agent
+#+begin_src bash
+sudo systemctl restart amazon-cloudwatch-agent.service
+#+end_src
