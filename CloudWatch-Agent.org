@@ -46,7 +46,7 @@ service amazon-cloudwatch-agent status
 
 
 
-** Install cloudwatch agent manually:
+** Cloudwatch-Agent installation (Manually):
 - AWS by default does not provide memory usage statistics for EC2 Instance. You'll need to configure Cloudwatch to monitor these system-level matrix.
 
 The entire process just has 4 steps, 
