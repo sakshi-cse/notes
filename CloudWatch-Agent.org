@@ -168,3 +168,10 @@ service amazon-cloudwatch-agent status
 #+begin_src bash
 sudo systemctl restart amazon-cloudwatch-agent.service
 #+end_src
+
+
+** CloudWatch Agent installation through SSM
+1. Create a IAM role with CloudWatchFullAccess and AmazonSSMFullAccess permission
+2. Attach this IAM role to your EC2 instances
+3. AWS Systems Manager > Distributor > AmazonCloudWatchAgent > Install one Time > select EC2 > Run
+4. Create config.json file the 
