@@ -174,4 +174,42 @@ sudo systemctl restart amazon-cloudwatch-agent.service
 1. Create a IAM role with CloudWatchFullAccess and AmazonSSMFullAccess permission
 2. Attach this IAM role to your EC2 instances
 3. AWS Systems Manager > Distributor > AmazonCloudWatchAgent > Install one Time > select EC2 > Run
-4. Create config.json file the 
+4. Create config.json file 
+#+begin_src bash
+{
+  "metrics": {
+    "append_dimensions": {
+      "InstanceId": "${aws:InstanceId}"
+    },
+    "metrics_collected": {
+      "mem": {
+        "measurement": [
+          "mem_used_percent"
+        ]
+      },
+      "disk": {
+        "resources": [
+          "*"
+        ],
+        "measurement": [
+          "used_percent"
+        ]
+      }
+    }
+  }
+}
+#+end_src
+- File permissions
+#+begin_src bash
+chmod 644 confif.json
+#+end_src
+- Start the Cloudwatch agent
+#+begin_src bash
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json
+#+end_src
+
+- Check status of the Cloudwatch agent
+#+begin_src bash
+service amazon-cloudwatch-agent status
+#+end_src
+
