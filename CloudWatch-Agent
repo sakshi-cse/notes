@@ -1,1 +1,11 @@
+* CloudWatch-Agent
+
+** Installation:
+- AWS by default does not provide memory usage statistics for EC2 Instance. You'll need to configure Cloudwatch to monitor these system-level matrix.
+
+The entire process just has 4 steps, 
+1. Create a IAM role with CloudWatchFullAccess permission
+2. Attach this IAM role to your EC2 instances
+3. Download and install the Cloudwatch agent
+4. Configure the Cloudwatch agent
 
