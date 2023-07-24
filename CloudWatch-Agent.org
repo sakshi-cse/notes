@@ -201,7 +201,7 @@ sudo systemctl restart amazon-cloudwatch-agent.service
 #+end_src
 - File permissions
 #+begin_src bash
-chmod 644 confif.json
+chmod 644 config.json
 #+end_src
 - Start the Cloudwatch agent
 #+begin_src bash
