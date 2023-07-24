@@ -10,7 +10,7 @@ The entire process just has 4 steps,
 4. Configure the Cloudwatch agent
 
 *** On Linux:
-++ Ubuntu:
+**** Ubuntu:
 
 - Step 1: Create a role name - AWSCustomRoleForEC2 with CloudWatchFullAccess permission. Assign the above role to your running AWS EC2 instance.
 
