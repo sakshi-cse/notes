@@ -9,3 +9,154 @@ The entire process just has 4 steps,
 3. Download and install the Cloudwatch agent
 4. Configure the Cloudwatch agent
 
+*** On Linux:
++ Ubuntu:
+
+Step 1: Create a role name - AWSCustomRoleForEC2 with CloudWatchFullAccess permission. Assign the above role to your running AWS EC2 instance.
+
+Step 2: Download and install the Cloudwatch agent in your EC2 instance
+#+begin_src bash
+wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+
+sudo dpkg -i -E ./amazon-cloudwatch-agent.deb
+Step 3: Launch the Cloudwatch wizard
+
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-config-wizard
+Choose these settings
+
+=============================================================
+= Welcome to the AWS CloudWatch Agent Configuration Manager =
+=============================================================
+On which OS are you planning to use the agent?
+1. linux
+2. windows
+default choice: [1]:
+
+Trying to fetch the default region based on ec2 metadata...
+Are you using EC2 or On-Premises hosts?
+1. EC2
+2. On-Premises
+default choice: [1]:
+
+Which user are you planning to run the agent?
+1. root
+2. cwagent
+3. others
+default choice: [1]:
+
+Do you want to turn on StatsD daemon?
+1. yes
+2. no
+default choice: [1]:
+
+Which port do you want StatsD daemon to listen to?
+default choice: [8125]
+
+What is the collect interval for StatsD daemon?
+1. 10s
+2. 30s
+3. 60s
+default choice: [1]:
+3
+
+What is the aggregation interval for metrics collected by StatsD daemon?
+1. Do not aggregate
+2. 10s
+3. 30s
+4. 60s
+default choice: [4]:
+4
+
+Do you want to monitor metrics from CollectD?
+1. yes
+2. no
+default choice: [1]:
+2
+
+Do you want to monitor any host metrics? e.g. CPU, memory, etc.
+1. yes
+2. no
+default choice: [1]:
+
+Do you want to monitor cpu metrics per core? Additional CloudWatch charges may apply.
+1. yes
+2. no
+default choice: [1]:
+2
+
+Do you want to add ec2 dimensions (ImageId, InstanceId, InstanceType, AutoScalingGroupName) into all of your metrics if the info is available?
+1. yes
+2. no
+default choice: [1]:
+2
+
+Would you like to collect your metrics at high resolution (sub-minute resolution)? This enables sub-minute resolution for all metrics, but you can customize for specific metrics in the output json file.
+1. 1s
+2. 10s
+3. 30s
+4. 60s
+default choice: [4]:
+4
+
+Which default metrics config do you want?
+1. Basic
+2. Standard
+3. Advanced
+4. None
+default choice: [1]:
+
+Current config as follows:
+{
+    "agent": {
+        "metrics_collection_interval": 60,
+        "run_as_user": "root"
+    },
+    "metrics": {
+        "metrics_collected": {
+            "disk": {
+                "measurement": [
+                    "used_percent"
+                ],
+                "metrics_collection_interval": 60,
+                "resources": [
+                    "*"
+                ]
+            },
+            "mem": {
+                "measurement": [
+                    "mem_used_percent"
+                ],
+                "metrics_collection_interval": 60
+            },
+            "statsd": {
+                "metrics_aggregation_interval": 60,
+                "metrics_collection_interval": 60,
+                "service_address": ":8125"
+            }
+        }
+    }
+}
+
+Are you satisfied with the above config? Note: it can be manually customized after the wizard completes to add additional items.
+1. yes
+2. no
+default choice: [1]:
+
+Do you have any existing CloudWatch Log Agent (http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AgentReference.html) configuration file to import for migration?
+1. yes
+2. no
+default choice: [2]:
+
+Do you want to monitor any log files?
+1. yes
+2. no
+default choice: [1]:
+2
+
+Saved config file to /opt/aws/amazon-cloudwatch-agent/bin/config.json successfully.
+Step 4: Start the Cloudwatch agent
+
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json
+Tip: Command to check status of the Cloudwatch agent
+
+service amazon-cloudwatch-agent status
