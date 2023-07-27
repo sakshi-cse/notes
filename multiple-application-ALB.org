@@ -1,0 +1,6 @@
+* Application LoadBalancer
+
+** Create multiple target groups in the application port number
+- Create ALB 
+- Add listeners and rules
+
