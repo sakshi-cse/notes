@@ -1,4 +1,6 @@
-Create vpc, ec2, and loadbalancer use of Terraform
+* Terraform
+
+** Create VPC, EC2, and LoadBalancer
 
 #+begin_src bash
 
