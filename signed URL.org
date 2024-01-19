@@ -1,0 +1,65 @@
+* Signed URL
+To generate signed URLs for S3 objects served through CloudFront using OpenSSL-generated key pairs, you would typically follow these steps:
+
+** Generate RSA Key Pair:
+
+#+begin_src bash
+openssl genrsa -out private-key.pem 2048
+openssl rsa -pubout -in private-key.pem -out public-key.pem
+#+end_src
+This generates a private key (pickme-dev-admin-private-key.pem) and its corresponding public key (pickme-dev-admin-public-key.pem).
+
+Upload Public Key to CloudFront:
+
+Upload the public key (pickme-dev-admin-public-key.pem) to CloudFront:
+Go to the CloudFront console.
+Select the distribution you're working with.
+Under the "General" tab, in the "Public Key" section, choose "Add Public Key" and upload your public key.
+Create a CloudFront Key Pair ID:
+
+While still in the CloudFront console, create a Key Pair ID:
+Go to the "Key Pairs" tab.
+Choose "Create Key Pair" and provide a name for the Key Pair ID.
+This Key Pair ID will be used in your signed URL.
+Generate Signed URLs in Node.js:
+#+begin_src bash
+#javascript
+
+const fs = require('fs');
+const crypto = require('crypto');
+const aws = require('aws-sdk');
+
+const cloudFrontKeyPairId = 'your-key-pair-id';
+const privateKeyPath = 'path/to/pickme-dev-admin-private-key.pem';
+
+const privateKey = fs.readFileSync(privateKeyPath, 'utf-8');
+const signer = crypto.createSign('RSA-SHA1');
+const cloudFrontUrl = 'https://your-cloudfront-url/';
+
+const resourcePath = 'your/s3/object/key.jpg'; // Replace with your S3 object key
+
+const expires = Math.floor(Date.now() / 1000) + 60 * 5; // Link expiration time (5 minutes)
+
+const policy = JSON.stringify({
+  Statement: [
+    {
+      Resource: `${cloudFrontUrl}${resourcePath}`,
+      Condition: {
+        DateLessThan: { 'AWS:EpochTime': expires },
+      },
+    },
+  ],
+});
+
+signer.update(policy);
+
+const signature = signer.sign(privateKey, 'base64');
+
+const signedUrl = `${cloudFrontUrl}${resourcePath}?Expires=${expires}&Signature=${encodeURIComponent(signature)}&Key-Pair-Id=${cloudFrontKeyPairId}`;
+
+console.log('Signed URL:', signedUrl);
+#+end_src
+Replace 'your-key-pair-id' with the Key Pair ID you created in CloudFront.
+Replace 'path/to/pickme-dev-admin-private-key.pem' with the path to your private key file.
+Replace 'https://your-cloudfront-url/' with the base CloudFront URL.
+Replace 'your/s3/object/key.jpg' with the key of the S3 object you want to generate a signed URL for.
