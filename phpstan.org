@@ -50,6 +50,8 @@ If you don't already have a composer.json file, create one in your project's roo
         "phpstan/phpstan": "^1.0"
     }
 }
+#+end_src
+
 Save the file.
 
 ** Install PHPStan using Composer:
