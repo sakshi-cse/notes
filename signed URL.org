@@ -21,7 +21,9 @@ While still in the CloudFront console, create a Key Pair ID:
 - Go to the "Key Pairs" tab.
 - Choose "Create Key Pair" and provide a name for the Key Pair ID.
 - This Key Pair ID will be used in your signed URL.
-Generate Signed URLs in Node.js:
+
+** Generate Signed URLs in Node.js:
+
 #+begin_src bash
 #javascript
 
