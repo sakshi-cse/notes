@@ -57,6 +57,7 @@ Save the file.
 Run the following command to install PHPStan and its dependencies:
 
 #+begin_src bash
+
 composer install
 #+end_src
 
