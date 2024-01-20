@@ -1,46 +1,50 @@
-Setting up PHPStan on Ubuntu 22.04 involves a series of steps. Below is a step-by-step guide to help you install and configure PHPStan on your Ubuntu 22.04 system:
+* PHPStan Setup Ubuntu server 22.04
 
-Install PHP:
+** Install PHP:
 
 Ensure that PHP is installed on your system. You can install it using the following commands:
 
-bash
-Copy code
+#+begin_src bash
 sudo apt update
-sudo apt install php
-Verify the installation:
+sudo apt install PHP
+#+end_src
 
-bash
-Copy code
+** Verify the installation:
+
+#+begin_src bash
 php -v
-Install Composer:
+#+end_src
+
+** Install Composer:
 
 Composer is a dependency manager for PHP and is used to install PHPStan. Run the following commands to install Composer:
 
-bash
-Copy code
+#+begin_src bash
 sudo apt install curl php-cli unzip
-bash
-Copy code
 curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
-Verify the Composer installation:
+#+end_src
 
-bash
-Copy code
+** Verify the Composer installation:
+
+#+begin_src bash
 composer --version
-Navigate to your PHP project:
+#+end_src
+
+** Navigate to your PHP project:
 
 Change your working directory to the root of your PHP project:
 
-bash
-Copy code
+#+begin_src bash
 cd /path/to/your/project
-Create a composer.json file:
+#+end_src
+
+** Create a composer.json file:
 
 If you don't already have a composer.json file, create one in your project's root. Here's a basic example:
 
-json
-Copy code
+#+begin_src bash
+#json
+
 {
     "require-dev": {
         "phpstan/phpstan": "^1.0"
@@ -48,32 +52,35 @@ Copy code
 }
 Save the file.
 
-Install PHPStan using Composer:
+** Install PHPStan using Composer:
 
 Run the following command to install PHPStan and its dependencies:
 
-bash
-Copy code
+#+begin_src bash
 composer install
+#+end_src
+
 This will create a vendor directory in your project containing PHPStan and its dependencies.
 
-Run PHPStan:
+** Run PHPStan:
 
 Once the installation is complete, you can run PHPStan to analyze your code:
 
-bash
-Copy code
+#+begin_src bash
 ./vendor/bin/phpstan analyse
+#+end_src
+
 This will analyze your code and report any potential issues.
 
-Configure PHPStan (Optional):
+** Configure PHPStan (Optional):
 
 Create a phpstan.neon configuration file in your project directory to customize PHPStan's behavior. For example:
 
-ini
-Copy code
+#+begin_src bash
+#ini
 parameters:
     level: 7
     paths:
         - src
+#+end_src
 Adjust the configuration based on your project structure and requirements.
