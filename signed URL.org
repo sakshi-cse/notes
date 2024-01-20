@@ -15,12 +15,12 @@ This generates a private key (private-key.pem) and its corresponding public key 
 - Go to the CloudFront console.
 - Select the distribution you're working with.
 - Under the "General" tab, in the "Public Key" section, choose "Add Public Key" and upload your public key.
-- Create a CloudFront Key Pair ID:
+** Create a CloudFront Key Pair ID:
 
 While still in the CloudFront console, create a Key Pair ID:
-Go to the "Key Pairs" tab.
-Choose "Create Key Pair" and provide a name for the Key Pair ID.
-This Key Pair ID will be used in your signed URL.
+- Go to the "Key Pairs" tab.
+- Choose "Create Key Pair" and provide a name for the Key Pair ID.
+- This Key Pair ID will be used in your signed URL.
 Generate Signed URLs in Node.js:
 #+begin_src bash
 #javascript
