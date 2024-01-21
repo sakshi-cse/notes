@@ -43,7 +43,7 @@ cd /path/to/your/project
 If you don't already have a composer.json file, create one in your project's root. Here's a basic example:
 
 #+begin_src bash
-#json
+
 
 {
     "require-dev": {
