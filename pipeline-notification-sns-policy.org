@@ -11,7 +11,7 @@
         "Service": "codestar-notifications.amazonaws.com"
       },
       "Action": "sns:Publish",
-      "Resource": "arn:aws:sns:ca-central-1:864751577576:isport-marketing-sns"
+      "Resource": ""
     },
     {
       "Sid": "__default_statement_ID",
@@ -30,10 +30,10 @@
         "SNS:Publish",
         "SNS:Receive"
       ],
-      "Resource": "arn:aws:sns:ca-central-1:864751577576:isport-marketing-sns",
+      "Resource": "arn:aws:sns:aws_region_name:aws_account_id:isport-marketing-sns",
       "Condition": {
         "StringEquals": {
-          "AWS:SourceOwner": "864751577576"
+          "AWS:SourceOwner": ""
         }
       }
     }
