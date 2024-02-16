@@ -43,15 +43,17 @@ This GitHub organization file provides step-by-step instructions to set up an Ev
 
     Note: You can replace the `AWS::EC2::Instance` resource type with other resources. For a list of available resource types, see the `resourceType` section in [ResourceIdentifier](https://docs.aws.amazon.com/config/latest/developerguide/resource-config-reference.html#resourceidentifier).
    ```json
-   {
-  "source": ["aws.config"],
-  "detail-type": ["Config Configuration Item Change"],
-  "detail": {
-    "messageType": ["ConfigurationItemChangeNotification"]
-  }
-}
-```
-Note: for all resources
+    {
+      "source": ["aws.config"],
+      "detail-type": ["Config Configuration Item Change"],
+      "detail": {
+        "messageType": ["ConfigurationItemChangeNotification"]
+      }
+    }
+    ```
+
+    Note: This event pattern will match all resource creation events in AWS Config.
+
 
 9. Choose **Next**.
 
