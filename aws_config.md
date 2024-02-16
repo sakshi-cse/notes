@@ -42,18 +42,28 @@ This GitHub organization file provides step-by-step instructions to set up an Ev
     ```
 
     Note: You can replace the `AWS::EC2::Instance` resource type with other resources. For a list of available resource types, see the `resourceType` section in [ResourceIdentifier](https://docs.aws.amazon.com/config/latest/developerguide/resource-config-reference.html#resourceidentifier).
+   ```json
+   {
+  "source": ["aws.config"],
+  "detail-type": ["Config Configuration Item Change"],
+  "detail": {
+    "messageType": ["ConfigurationItemChangeNotification"]
+  }
+}
+```
+Note: for all resources
 
-8. Choose **Next**.
+9. Choose **Next**.
 
-9. For **Target types**, select **AWS service**.
+10. For **Target types**, select **AWS service**.
 
-10. For **Select a target**, choose **SNS topic**.
+11. For **Select a target**, choose **SNS topic**.
 
-11. For **Topic**, choose your SNS topic.
+12. For **Topic**, choose your SNS topic.
 
-12. Expand **Additional settings**. Then, for **Configure target input**, choose **Input transformer**.
+13. Expand **Additional settings**. Then, for **Configure target input**, choose **Input transformer**.
 
-13. Choose **Configure input transformer**. Then, under **Target input transformer** for the **Input Path** text box, enter the following example path:
+14. Choose **Configure input transformer**. Then, under **Target input transformer** for the **Input Path** text box, enter the following example path:
 
     ```json
     {
@@ -65,19 +75,19 @@ This GitHub organization file provides step-by-step instructions to set up an Ev
     }
     ```
 
-14. For the **Template** text box, enter the following example template:
+15. For the **Template** text box, enter the following example template:
 
     ```
     "On <configurationItemCaptureTime> AWS Config service recorded a creation of a new <resource_type> with Id <resource_ID> in the account <awsAccountId> region <awsRegion>. For more details open the AWS Config console at https://console.aws.amazon.com/config/home?region=<awsRegion>#/timeline/<resource_type>/<resource_ID>/configuration"
     ```
 
-15. Choose **Confirm**. Then, choose **Next**.
+16. Choose **Confirm**. Then, choose **Next**.
 
-16. Optionally, you can **Add new tag**. Then, choose **Next**.
+17. Optionally, you can **Add new tag**. Then, choose **Next**.
 
-17. Choose **Create rule**.
+18. Choose **Create rule**.
 
-18. If an event type is initiated, you will receive an SNS email notification with the custom fields populated from step 13 similar to the following:
+19. If an event type is initiated, you will receive an SNS email notification with the custom fields populated from step 13 similar to the following:
 
     ```
     "On ExampleTime AWS Config service recorded a creation..."
