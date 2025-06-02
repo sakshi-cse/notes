@@ -1,0 +1,94 @@
+#+TITLE: Rancher Setup on Kubernetes using Helm
+#+AUTHOR: DevOps Team
+#+OPTIONS: toc:nil
+#+LANGUAGE: en
+
+* 📦 Prerequisites
+
+- A running Kubernetes cluster (v1.21+)
+- ~kubectl~ installed and configured
+- ~helm~ v3+ installed
+
+* 🧰 Step-by-Step Installation
+
+** 1. Add Rancher Helm Repository
+
+#+begin_src bash
+helm repo add rancher-latest https://releases.rancher.com/server-charts/latest
+helm repo update
+#+end_src
+
+** 2. Install cert-manager
+
+Rancher requires ~cert-manager~ for managing TLS certificates.
+
+#+begin_src bash
+kubectl create namespace cert-manager
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
+
+helm install cert-manager jetstack/cert-manager \
+  --namespace cert-manager \
+  --set installCRDs=true
+#+end_src
+
+Verify all cert-manager pods are running:
+
+#+begin_src bash
+kubectl get pods -n cert-manager
+#+end_src
+
+** 3. Install Rancher
+
+#+begin_src bash
+kubectl create namespace cattle-system
+
+helm install rancher rancher-latest/rancher \
+  --namespace cattle-system \
+  --set hostname=rancher.example.in \
+  --set replicas=1 \
+  --version 2.11.2
+#+end_src
+
+Replace ~rancher.example.in~ with your actual domain name.
+
+** 4. Verify Rancher Deployment
+
+#+begin_src bash
+kubectl -n cattle-system get pods
+#+end_src
+
+** 5. Expose Rancher via LoadBalancer
+
+#+begin_src bash
+kubectl get svc -n cattle-system
+
+kubectl patch svc rancher -n cattle-system \
+  -p '{"spec": {"type": "LoadBalancer"}}'
+#+end_src
+
+Note the external IP once it’s provisioned (e.g., ~54.237.56.213~).
+
+** 6. Retrieve Bootstrap Password
+
+#+begin_src bash
+kubectl get secret --namespace cattle-system bootstrap-secret \
+  -o go-template='{{.data.bootstrapPassword|base64decode}}{{"\n"}}'
+#+end_src
+
+Use this password for the initial login.
+
+* 🌐 Access Rancher
+
+Open your Rancher instance in the browser:
+
+#+begin_example
+https://rancher.example.in
+#+end_example
+
+* ✅ Next Steps
+
+- Add or import Kubernetes clusters.
+- Configure users and permissions.
+- Enable HTTPS and DNS if not already configured.
+
