@@ -1,0 +1,119 @@
+* Mautic 4.4.13 Installation Guide for Ubuntu
+
+** Prerequisites
+- Ubuntu 20.04 or 22.04
+- Apache2
+- PHP 7.4 – 8.1 (avoid 8.2+)
+- MySQL or MariaDB
+- A domain/subdomain (e.g., mautic.example.com)
+- Root or sudo access
+
+** Step 1: Update System and Install Required Packages
+#+begin_src bash
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y apache2 unzip curl wget php php-cli php-common php-mysql \
+php-gd php-curl php-imap php-mbstring php-xml php-zip php-bcmath php-intl php-soap php-opcache
+sudo apt install -y mariadb-server
+sudo a2enmod rewrite ssl
+#+end_src
+
+** Step 2: Configure PHP
+#+begin_src bash
+sudo nano /etc/php/*/apache2/php.ini
+#+end_src
+
+Make the following changes:
+#+begin_example
+memory_limit = 256M
+upload_max_filesize = 64M
+post_max_size = 64M
+max_execution_time = 300
+date.timezone = Asia/Kolkata
+#+end_example
+
+Restart Apache:
+#+begin_src bash
+sudo systemctl restart apache2
+#+end_src
+
+** Step 3: Create MySQL Database and User
+#+begin_src bash
+sudo mysql -u root -p
+#+end_src
+
+In the MySQL shell:
+#+begin_src sql
+CREATE DATABASE mauticdb;
+CREATE USER 'mauticuser'@'localhost' IDENTIFIED BY 'StrongPassword123';
+GRANT ALL PRIVILEGES ON mauticdb.* TO 'mauticuser'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
+#+end_src
+
+** Step 4: Download and Extract Mautic
+#+begin_src bash
+cd /var/www/html
+sudo wget https://github.com/mautic/mautic/releases/download/4.4.13/4.4.13-update.zip
+sudo unzip 4.4.13-update.zip -d /var/www/html/mautic
+#+end_src
+
+** Step 5: Set Permissions
+#+begin_src bash
+sudo chown -R www-data:www-data /var/www/html/mautic
+sudo chmod -R 755 /var/www/html/mautic
+#+end_src
+
+** Step 6: Configure Apache Virtual Host
+#+begin_src bash
+sudo nano /etc/apache2/sites-available/mautic.conf
+#+end_src
+
+Paste the following config:
+#+begin_src apache
+<VirtualHost *:80>
+    ServerAdmin admin@example.com
+    DocumentRoot /var/www/html/mautic
+    ServerName mautic.example.com
+
+    <Directory /var/www/html/mautic/>
+        Options FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/mautic_error.log
+    CustomLog ${APACHE_LOG_DIR}/mautic_access.log combined
+</VirtualHost>
+#+end_src
+
+Enable site and reload Apache:
+#+begin_src bash
+sudo a2ensite mautic.conf
+sudo systemctl reload apache2
+#+end_src
+
+** Step 7: (Optional) Enable HTTPS via Let's Encrypt
+#+begin_src bash
+sudo apt install certbot python3-certbot-apache -y
+sudo certbot --apache -d mautic.example.com
+#+end_src
+
+** Step 8: Complete Installation via Web UI
+- Open browser and visit: http://mautic.example.com
+- Complete installer steps:
+  - Environment check
+  - Database credentials
+  - Admin user setup
+  - Email settings
+
+** Step 9: Verify Installation
+#+begin_src bash
+sudo systemctl status apache2
+sudo apache2ctl configtest
+php -m | grep imap
+#+end_src
+
+** ✅ Final Notes
+- Mautic is now installed and ready.
+- URL: http://mautic.example.com (or HTTPS if enabled)
+- You can now begin using campaigns, segments, and email automation.
