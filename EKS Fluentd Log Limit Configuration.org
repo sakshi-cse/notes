@@ -1,0 +1,162 @@
+#+TITLE: EKS Fluentd Logging – /var/log Limit Configuration
+#+AUTHOR: DevOps Team
+#+OPTIONS: toc:2
+
+* 🎯 Objective
+Control log growth on EKS worker nodes by limiting disk usage under /var/log using Fluentd buffer settings.
+
+This helps prevent:
+- Disk exhaustion on nodes
+- Kubernetes DiskPressure issues
+- Unexpected pod evictions
+
+* 🏗️ Architecture Overview
+
+- Container logs → /var/log/containers
+- Fluentd DaemonSet reads logs
+- Logs buffered locally (/var/log/fluentd-buffers)
+- Forwarded to ContainIQ
+
+* 📂 Fluentd Volume Mounts
+
+#+BEGIN_SRC yaml
+volumeMounts:
+  - mountPath: /var/log
+    name: varlog
+  - mountPath: /var/lib/docker/containers
+    name: varlibdockercontainers
+    readOnly: true
+  - mountPath: /containiq
+    name: containiqconfig
+  - mountPath: /fluentd/etc/fluent.conf
+    name: fluentd-config
+    subPath: fluent.conf
+#+END_SRC
+
+* ⚙️ Configuration Steps
+
+** 1. Edit Fluentd DaemonSet
+#+BEGIN_SRC bash
+kubectl edit ds fluentd -n containiq
+#+END_SRC
+
+** 2. Update fluent.conf
+#+BEGIN_SRC conf
+@include "#{ENV['FLUENTD_SYSTEMD_CONF'] || 'systemd'}.conf"
+@include "#{ENV['FLUENTD_PROMETHEUS_CONF'] || 'prometheus'}.conf"
+@include kubernetes.conf
+@include conf.d/*.conf
+
+<match **>
+  @type containiq
+  @id out_containiq
+
+  <buffer>
+    @type file
+    path /var/log/fluentd-buffers/containiq.buffer
+
+    chunk_limit_size 10m
+    total_limit_size 2g
+    overflow_action drop_oldest_chunk
+
+    flush_interval 5s
+    retry_forever true
+  </buffer>
+</match>
+#+END_SRC
+
+* 🔍 Configuration Details
+
+| Parameter            | Description                              |
+|---------------------+------------------------------------------|
+| @type file          | Enables file-based buffering             |
+| path                | Buffer directory inside /var/log         |
+| chunk_limit_size    | Max size per chunk (10MB)                |
+| total_limit_size    | Total buffer cap (2GB)                   |
+| overflow_action     | Drops oldest logs when full              |
+| flush_interval      | Flush logs every 5 seconds               |
+| retry_forever       | Retry sending logs indefinitely          |
+
+* 📊 Recommended Limits
+
+| Node Disk Size | Suggested Limit |
+|----------------+----------------|
+| ≤ 50GB         | 500MB – 1GB    |
+| 50–100GB       | 1GB – 2GB      |
+| > 100GB        | 2GB – 5GB      |
+
+* 🧪 Verification
+
+** Check Fluentd Pods
+#+BEGIN_SRC bash
+kubectl get pods -n containiq -l name=fluentd
+#+END_SRC
+
+** Check Buffer Usage
+#+BEGIN_SRC bash
+du -sh /var/log/fluentd-buffers/
+#+END_SRC
+
+** Check Node Disk Usage
+#+BEGIN_SRC bash
+df -h
+#+END_SRC
+
+** View Logs
+#+BEGIN_SRC bash
+kubectl logs -n containiq <fluentd-pod-name>
+#+END_SRC
+
+* 🚨 Troubleshooting
+
+** Disk Still Filling
+- Check /var/log/containers
+- Verify total_limit_size
+- Ensure buffer path is correct
+
+** Logs Dropping
+Due to:
+#+BEGIN_SRC conf
+overflow_action drop_oldest_chunk
+#+END_SRC
+
+Increase total_limit_size if needed.
+
+** Fluentd Crash / Restart
+#+BEGIN_SRC bash
+kubectl describe pod <fluentd-pod> -n containiq
+#+END_SRC
+
+* 🔐 Best Practices
+
+** Enable Log Rotation
+#+BEGIN_SRC bash
+sudo vi /etc/logrotate.d/containers
+#+END_SRC
+
+#+BEGIN_SRC conf
+/var/log/containers/*.log {
+  daily
+  rotate 5
+  compress
+  missingok
+  copytruncate
+}
+#+END_SRC
+
+** Optional Improvements
+- Use dedicated volume for logs
+- Ship logs to CloudWatch / ELK
+- Set disk usage alerts
+
+* ✅ Outcome
+
+- /var/log usage is capped
+- Fluentd buffer limited to 2GB
+- Old logs auto-removed
+- Improved node stability
+
+* 📌 Notes
+- Changes apply via DaemonSet (all nodes)
+- No downtime expected (rolling update)
+- Monitor for 24–48 hours after change
