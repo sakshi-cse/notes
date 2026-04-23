@@ -1,0 +1,257 @@
+#+TITLE: Site-to-Site VPN Setup (AWS VPC ↔ OpenSwan)
+#+AUTHOR: DevOps
+#+DATE: 2026-04-23
+
+* Architecture Overview
+
+- VPC A (AWS VPN Side)
+  - CIDR: 10.0.0.0/16
+  - AWS Managed Site-to-Site VPN
+  - Route Propagation: Enabled
+
+- VPC B (OpenSwan Side)
+  - CIDR: 172.0.0.0/16
+  - EC2 instance running Libreswan/OpenSwan
+  - Acts as Customer Gateway
+
+---
+
+* VPC A Configuration (AWS Side)
+
+** Step 1: Create VPN Components
+- Create Virtual Private Gateway (VGW)
+- Create Customer Gateway (CGW) using OpenSwan Public IP
+- Create Site-to-Site VPN connection
+
+** Step 2: Enable Route Propagation
+- Go to Route Tables
+- Enable route propagation in ALL route tables
+
+Result:
+172.0.0.0/16 → VGW
+
+** Step 3: Security Rules
+Allow:
+- UDP 500 (IKE)
+- UDP 4500 (NAT-T)
+- ESP (Protocol 50)
+
+---
+
+* VPC B Configuration (OpenSwan Side)
+
+** Step 1: EC2 Setup
+- Launch EC2 instance in VPC B
+- Assign Elastic IP
+- Disable Source/Destination Check
+
+** Step 2: Route Table Configuration
+In ALL route tables:
+
+Destination: 10.0.0.0/16
+Target: OpenSwan Instance ENI
+
+---
+
+* OpenSwan / Libreswan Installation
+
+#+BEGIN_SRC bash
+apt update
+sudo apt install libreswan -y
+#+END_SRC
+
+---
+
+* Kernel Configuration
+
+** Enable IP Forwarding
+#+BEGIN_SRC bash
+echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
+sysctl -p
+cat /proc/sys/net/ipv4/ip_forward
+#+END_SRC
+
+** Disable Reverse Path Filtering
+#+BEGIN_SRC bash
+sudo sysctl -w net.ipv4.conf.all.rp_filter=0
+sudo sysctl -w net.ipv4.conf.default.rp_filter=0
+sudo sysctl -w net.ipv4.conf.eth0.rp_filter=0
+sudo sysctl -w net.ipv4.conf.ens5.rp_filter=0
+
+echo "net.ipv4.conf.all.rp_filter=0" >> /etc/sysctl.conf
+echo "net.ipv4.conf.default.rp_filter=0" >> /etc/sysctl.conf
+
+sudo sysctl --system
+#+END_SRC
+
+---
+
+* IPsec Configuration
+
+** /etc/ipsec.conf
+#+BEGIN_SRC bash
+include /etc/ipsec.d/*.conf
+#+END_SRC
+
+---
+
+** /etc/ipsec.d/aws.conf
+
+#+BEGIN_SRC bash
+conn Tunnel1
+    authby=secret
+    auto=start
+    left=%defaultroute
+    leftid=18.144.248.54
+    right=13.56.128.209
+    type=tunnel
+    ikelifetime=8h
+    keylife=1h
+    esp=aes128-sha1
+    ike=aes128-sha1;modp2048
+    keyingtries=%forever
+    keyexchange=ike
+    leftsubnet=172.0.0.0/16
+    rightsubnet=10.0.0.0/16
+    mark=100/0xffffffff
+    dpddelay=10
+    dpdtimeout=30
+    dpdaction=restart_by_peer
+
+conn Tunnel2
+    authby=secret
+    auto=start
+    left=%defaultroute
+    leftid=18.144.248.54
+    right=204.236.134.118
+    type=tunnel
+    ikelifetime=8h
+    keylife=1h
+    esp=aes128-sha1
+    ike=aes128-sha1;modp2048
+    keyingtries=%forever
+    keyexchange=ike
+    leftsubnet=172.0.0.0/16
+    rightsubnet=10.0.0.0/16
+    mark=200/0xffffffff
+    dpddelay=10
+    dpdtimeout=30
+    dpdaction=restart_by_peer
+#+END_SRC
+
+---
+
+** /etc/ipsec.d/aws.secrets
+
+#+BEGIN_SRC bash
+18.144.248.54 13.56.128.209 : PSK "your-shared-key"
+18.144.248.54 204.236.134.118 : PSK "your-shared-key"
+#+END_SRC
+
+---
+
+* Start IPsec
+
+#+BEGIN_SRC bash
+sudo ipsec restart
+sudo ipsec auto --up Tunnel1
+sudo ipsec auto --up Tunnel2
+sudo ipsec status
+#+END_SRC
+
+---
+
+* IPTables Configuration (Traffic Routing)
+
+** Outbound Traffic (VPC B → VPC A)
+#+BEGIN_SRC bash
+iptables -t mangle -A OUTPUT -s 172.0.0.0/16 -d 10.0.0.0/16 -j MARK --set-mark 100
+iptables -t mangle -A FORWARD -s 172.0.0.0/16 -d 10.0.0.0/16 -j MARK --set-mark 100
+iptables -t mangle -A PREROUTING -s 172.0.0.0/16 -d 10.0.0.0/16 -j MARK --set-mark 100
+#+END_SRC
+
+** Return Traffic (VPC A → VPC B)
+#+BEGIN_SRC bash
+iptables -t mangle -A PREROUTING -s 10.0.0.0/16 -d 172.0.0.0/16 -j MARK --set-mark 200
+iptables -t mangle -A FORWARD -s 10.0.0.0/16 -d 172.0.0.0/16 -j MARK --set-mark 200
+#+END_SRC
+
+---
+
+* Verification
+
+** Check Tunnel Status
+#+BEGIN_SRC bash
+sudo ipsec status
+ipsec auto --listall
+#+END_SRC
+
+** Check Policies
+#+BEGIN_SRC bash
+ip xfrm policy
+ip xfrm state
+#+END_SRC
+
+** Check Routes
+#+BEGIN_SRC bash
+ip route show
+#+END_SRC
+
+** Connectivity Test
+#+BEGIN_SRC bash
+ping 10.0.11.99
+ping 10.0.143.60
+ping 172.0.10.119
+#+END_SRC
+
+** Packet Capture
+#+BEGIN_SRC bash
+tcpdump -i ens5 icmp
+#+END_SRC
+
+---
+
+* Troubleshooting
+
+#+BEGIN_SRC bash
+sudo ipsec status
+sudo ipsec whack --trafficstatus
+
+sudo ipsec restart
+sudo ipsec stop
+sudo ipsec start
+
+cat /etc/ipsec.conf
+grep -R "conn" /etc/ipsec*
+
+ip a
+ip route show
+
+cat /proc/sys/net/ipv4/ip_forward
+
+iptables -L -n -v
+iptables -t nat -L -n -v
+iptables -t mangle -L -n -v
+#+END_SRC
+
+---
+
+* Important Notes
+
+- Source/Destination Check must be DISABLED
+- Route propagation must be ENABLED in VPC A
+- Route to OpenSwan ENI must be added in VPC B
+- Ensure correct PSK and encryption settings
+- Both tunnels should be UP
+
+---
+
+* Summary
+
+| Component | Configuration |
+|-----------+--------------|
+| VPC A     | Route propagation enabled |
+| VPC B     | Route to OpenSwan ENI |
+| OpenSwan  | Libreswan configured |
+| Routing   | IPTables marking |
+| HA        | Dual tunnels |
